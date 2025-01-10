@@ -20,7 +20,7 @@ JSON is formatted in pretty-print format up to 2 levels deep, after which compac
 
 ```bash
 cargo build --release
-sudo mv target/release/json_colorizer /usr/local/bin
+sudo mv target/release/json-colorization /usr/local/bin
 ```
 
 ## Usage
@@ -29,13 +29,13 @@ Pipe any output that contains JSON lines:
 
 ```bash
 # Process logs
-yarn serve 2>&1 | json_colorizer
+yarn serve 2>&1 | json-colorization
 
 # File input
-cat logfile.txt | json_colorizer
+cat logfile.txt | json-colorization
 
 # Direct JSON formatting
-echo '{"hello": {"world": {"deeply": {"nested": "object"}}}}' | json_colorizer
+echo '{"hello": {"world": {"deeply": {"nested": "object"}}}}' | json-colorization
 ```
 
 ### Example Output
