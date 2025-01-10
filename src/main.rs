@@ -2,7 +2,41 @@ use colored::*;
 use serde_json::Value;
 use std::io::{self, BufRead};
 
-fn colorize_json(json: &Value, indent: usize) -> String {
+fn colorize_json_compact(json: &Value) -> String {
+    match json {
+        Value::Object(map) => {
+            let contents: Vec<String> = map
+                .iter()
+                .map(|(k, v)| {
+                    format!(
+                        "\"{}\": {}",
+                        k.bright_blue().bold(),
+                        colorize_json_compact(v)
+                    )
+                })
+                .collect();
+            format!("{{{}}}", contents.join(", "))
+        }
+        Value::Array(arr) => {
+            let contents: Vec<String> = arr.iter().map(|v| colorize_json_compact(v)).collect();
+            format!("[{}]", contents.join(", "))
+        }
+        // Other value types remain the same
+        Value::String(s) => format!("\"{}\"", s.bright_green()),
+        Value::Number(n) => n.to_string().bright_yellow().to_string(),
+        Value::Bool(b) => b.to_string().bright_purple().to_string(),
+        Value::Null => "null".bright_red().to_string(),
+    }
+}
+
+fn colorize_json(json: &Value, nesting_level: usize) -> String {
+    if nesting_level > 1 {
+        // If nesting level > 2, switch to  compact formatting
+        return colorize_json_compact(json);
+    }
+    let indent = nesting_level * 2;
+
+    // Original pretty formatting for nesting level <= 2
     match json {
         Value::Object(map) => {
             let indent_str = " ".repeat(indent);
@@ -14,8 +48,8 @@ fn colorize_json(json: &Value, indent: usize) -> String {
                     format!(
                         "{}\"{}\": {}",
                         next_indent,
-                        k.bright_blue(),
-                        colorize_json(v, indent + 2)
+                        k.bright_blue().bold(),
+                        colorize_json(v, nesting_level + 1)
                     )
                 })
                 .collect();
@@ -28,15 +62,12 @@ fn colorize_json(json: &Value, indent: usize) -> String {
 
             let contents: Vec<String> = arr
                 .iter()
-                .map(|v| format!("{}{}", next_indent, colorize_json(v, indent + 2)))
+                .map(|v| format!("{}{}", next_indent, colorize_json(v, nesting_level + 1)))
                 .collect();
 
             format!("[\n{}\n{}]", contents.join(",\n"), indent_str)
         }
-        Value::String(s) => format!("\"{}\"", s.bright_green()),
-        Value::Number(n) => n.to_string().bright_yellow().to_string(),
-        Value::Bool(b) => b.to_string().bright_purple().to_string(),
-        Value::Null => "null".bright_red().to_string(),
+        _ => colorize_json_compact(json),
     }
 }
 
